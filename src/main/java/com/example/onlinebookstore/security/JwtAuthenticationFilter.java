@@ -1,5 +1,7 @@
 package com.example.onlinebookstore.security;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,6 +18,8 @@ import java.io.IOException;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    private static final Logger LOG = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
 
@@ -31,10 +35,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = authHeader.substring(7);
             if (jwtUtil.validateToken(token)) {
                 String username = jwtUtil.extractUsername(token);
+                LOG.debug("Authenticated request for user: {}", username);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(auth);
+            } else {
+                LOG.debug("Invalid JWT token in request");
             }
         }
         filterChain.doFilter(request, response);
