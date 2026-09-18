@@ -1,0 +1,44 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    springBootVersion = '2.3.12.RELEASE'
+    jjwtVersion = '0.9.1'
+}
+
+dependencies {
+    implementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-security:${springBootVersion}"
+    runtimeOnly 'com.h2database:h2:1.4.200'
+    implementation "io.jsonwebtoken:jjwt:${jjwtVersion}"
+
+    // JAXB was removed from the JDK in Java 11+; Hibernate 5.4 still needs it at runtime.
+    runtimeOnly 'javax.xml.bind:jaxb-api:2.3.1'
+    runtimeOnly 'org.glassfish.jaxb:jaxb-runtime:2.3.1'
+    runtimeOnly 'javax.activation:activation:1.1.1'
+
+    testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+}
+
+application {
+    mainClass = 'com.example.onlinebookstore.OnlineBookstoreApplication'
+}
+
+test {
+    useJUnitPlatform()
+}

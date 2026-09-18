@@ -1,0 +1,114 @@
+{
+  "info": {
+    "name": "OnlineBookstore API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "bookId", "value": "" },
+    { "key": "cartItemId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"alice\",\n  \"password\": \"secret\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/auth/register", "host": [ "{{baseUrl}}" ], "path": [ "api","auth","register" ] }
+      }
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"alice\",\n  \"password\": \"secret\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/auth/login", "host": [ "{{baseUrl}}" ], "path": [ "api","auth","login" ] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var json = pm.response.json();",
+              "if(json && json.token){ pm.collectionVariables.set('token', json.token); }",
+              "pm.test('token received', function(){ pm.expect(json.token).to.exist; });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get Books",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/api/books", "host": [ "{{baseUrl}}" ], "path": [ "api","books" ] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": [ "var json = pm.response.json(); if(json && json.length>0){ pm.collectionVariables.set('bookId', json[0].id); }" ] } } ]
+    },
+    {
+      "name": "Get Book",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/api/books/{{bookId}}", "host": [ "{{baseUrl}}" ], "path": [ "api","books","{{bookId}}" ] }
+      }
+    },
+    {
+      "name": "Get Cart (protected)",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{baseUrl}}/api/cart", "host": [ "{{baseUrl}}" ], "path": [ "api","cart" ] }
+      }
+    },
+    {
+      "name": "Add To Cart",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"bookId\": \"{{bookId}}\",\n  \"qty\": \"1\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/cart/add", "host": [ "{{baseUrl}}" ], "path": [ "api","cart","add" ] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var json = pm.response.json();",
+              "if(json && json.items && json.items.length>0){ pm.collectionVariables.set('cartItemId', json.items[0].id); }",
+              "pm.test('cart updated', function(){ pm.expect(json.items.length).to.be.above(0); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Update Cart Item",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"cartItemId\": \"{{cartItemId}}\",\n  \"qty\": \"2\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/cart/update", "host": [ "{{baseUrl}}" ], "path": [ "api","cart","update" ] }
+      }
+    },
+    {
+      "name": "Remove Cart Item",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"cartItemId\": \"{{cartItemId}}\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/cart/remove", "host": [ "{{baseUrl}}" ], "path": [ "api","cart","remove" ] }
+      }
+    },
+    {
+      "name": "Checkout",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{baseUrl}}/api/cart/checkout", "host": [ "{{baseUrl}}" ], "path": [ "api","cart","checkout" ] }
+      }
+    }
+  ]
+}
