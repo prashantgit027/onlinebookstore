@@ -1,0 +1,380 @@
+openapi: 3.0.3
+info:
+  title: Online Bookstore API
+  description: >
+    Simple Spring Boot REST API for an online bookstore supporting book listing,
+    user registration/login (JWT), shopping cart management, and checkout.
+  version: "1.0.0"
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+tags:
+  - name: Books
+    description: Browse the book catalog
+  - name: Auth
+    description: User registration and authentication
+  - name: Cart
+    description: Shopping cart and checkout (requires a JWT bearer token)
+
+paths:
+  /api/books:
+    get:
+      tags: [Books]
+      summary: List all books
+      operationId: listBooks
+      responses:
+        "200":
+          description: List of books
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Book"
+
+  /api/books/{id}:
+    get:
+      tags: [Books]
+      summary: Get a book by id
+      operationId: getBook
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Book found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "404":
+          description: Book not found
+
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Missing fields or username already exists
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "username exists"
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login and obtain a JWT token
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          description: Missing username or password
+        "401":
+          description: Invalid credentials
+
+  /api/cart:
+    get:
+      tags: [Cart]
+      summary: Get the current user's cart
+      operationId: getCart
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+        "401":
+          description: Missing or invalid token
+
+  /api/cart/add:
+    post:
+      tags: [Cart]
+      summary: Add a book to the cart
+      operationId: addToCart
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddToCartRequest"
+      responses:
+        "200":
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+        "401":
+          description: Missing or invalid token
+
+  /api/cart/update:
+    post:
+      tags: [Cart]
+      summary: Update the quantity of a cart item
+      operationId: updateCartItem
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCartItemRequest"
+      responses:
+        "200":
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+        "401":
+          description: Missing or invalid token
+
+  /api/cart/remove:
+    post:
+      tags: [Cart]
+      summary: Remove an item from the cart
+      operationId: removeCartItem
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RemoveCartItemRequest"
+      responses:
+        "200":
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+        "401":
+          description: Missing or invalid token
+
+  /api/cart/checkout:
+    post:
+      tags: [Cart]
+      summary: Checkout the current cart and create an order
+      operationId: checkout
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Order created from the cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "401":
+          description: Missing or invalid token
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Book:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        author:
+          type: string
+        price:
+          type: number
+          format: double
+        stock:
+          type: integer
+      example:
+        id: 1
+        title: "Effective Java"
+        author: "Joshua Bloch"
+        price: 45.00
+        stock: 10
+
+    User:
+      type: object
+      description: >
+        Public user representation. The password hash is never serialized
+        (excluded via @JsonIgnore).
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        role:
+          type: string
+          example: "USER"
+
+    RegisterRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+      example:
+        username: "alice"
+        password: "secret123"
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+      example:
+        username: "alice"
+        password: "secret123"
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT bearer token to use in the Authorization header
+      example:
+        token: "eyJhbGciOiJIUzI1NiJ9...."
+
+    CartItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        book:
+          $ref: "#/components/schemas/Book"
+        quantity:
+          type: integer
+
+    Cart:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        user:
+          $ref: "#/components/schemas/User"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CartItem"
+
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        bookTitle:
+          type: string
+        price:
+          type: number
+          format: double
+        quantity:
+          type: integer
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        user:
+          $ref: "#/components/schemas/User"
+        total:
+          type: number
+          format: double
+        createdAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+
+    AddToCartRequest:
+      type: object
+      required: [bookId, qty]
+      properties:
+        bookId:
+          type: string
+          description: Book id (sent as a string)
+        qty:
+          type: string
+          description: Quantity (sent as a string), defaults to "1" if omitted
+      example:
+        bookId: "1"
+        qty: "2"
+
+    UpdateCartItemRequest:
+      type: object
+      required: [cartItemId, qty]
+      properties:
+        cartItemId:
+          type: string
+        qty:
+          type: string
+      example:
+        cartItemId: "1"
+        qty: "3"
+
+    RemoveCartItemRequest:
+      type: object
+      required: [cartItemId]
+      properties:
+        cartItemId:
+          type: string
+      example:
+        cartItemId: "1"
