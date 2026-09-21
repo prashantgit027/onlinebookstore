@@ -1,10 +1,12 @@
 package com.example.onlinebookstore.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Data;
 
 import javax.persistence.*;
 
 @Entity
+@Data
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -14,20 +16,13 @@ public class User {
     @Column(nullable = false)
     @JsonIgnore
     private String password; // stored hashed; never serialized in API responses
-    private String role = "USER";
+
+    @Enumerated(EnumType.STRING)
+    private Role role = Role.USER;
 
     public User() {}
     public User(String username, String password) {
         this.username = username;
         this.password = password;
     }
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
 }

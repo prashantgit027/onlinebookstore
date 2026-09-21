@@ -106,7 +106,62 @@ curl -s -X POST http://localhost:8080/api/cart/checkout \
 ```
 
 # onlinebookstore
-We will create a Simple Online Bookstore. We will display a list of books and users will have the possibility to add books to their cart, display the cart and modify the quantity of items and remove items from the cart. RESTful API using Spring Boot and Java 8 
+We will create a Simple Online Bookstore. We will display a list of books and users will have the possibility to add books to their cart, display the cart and modify the quantity of items and remove items from the cart. RESTful API using Spring Boot. Java: 11 (project is built and tested against Java 11).
 ----
 Notes:
 - This project uses Gradle. If you don't have the Gradle wrapper (`gradlew`) present, you can install Gradle or generate the wrapper with `gradle wrapper`.
+
+Database migrations
+-------------------
+This project uses Flyway for schema migrations. On application start Flyway will run migrations found in `src/main/resources/db/migration`.
+
+To run the application locally (use the included Gradle wrapper):
+
+```bash
+chmod +x gradlew
+./gradlew bootRun
+```
+
+To run tests and generate coverage locally:
+
+```bash
+./gradlew test jacocoTestReport
+```
+
+CI
+--
+A simple GitHub Actions workflow is included at `.github/workflows/ci.yml` which runs `./gradlew clean build` and the tests.
+
+OAuth2 / Keycloak
+------------------
+This project includes a placeholder security configuration. To enable OAuth2 Resource Server (JWT) backed by an OpenID Connect provider such as Keycloak:
+
+1. Add the dependency: `org.springframework.boot:spring-boot-starter-oauth2-resource-server` to `build.gradle`.
+2. Configure properties:
+
+```properties
+spring.security.oauth2.resourceserver.jwt.issuer-uri=https://<your-keycloak>/auth/realms/<realm>
+```
+
+3. Replace or extend `SecurityConfig` with a resource server configuration and secure endpoints using scopes/roles.
+
+Keycloak documentation: https://www.keycloak.org/docs/latest/securing_apps/
+
+API docs / Swagger UI
+---------------------
+This project exposes OpenAPI documentation via `springdoc`.
+After running the application, visit `/swagger-ui.html` or `/v3/api-docs` to view the interactive API documentation.
+
+Prometheus scrape config
+------------------------
+To scrape metrics from this application, expose the Prometheus actuator endpoint (already enabled) and add a scrape job to your Prometheus configuration:
+
+```yaml
+scrape_configs:
+  - job_name: 'onlinebookstore'
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+    metrics_path: '/actuator/prometheus'
+```
+
+Adjust `targets` to point to your host or container network address where the Spring Boot app runs.

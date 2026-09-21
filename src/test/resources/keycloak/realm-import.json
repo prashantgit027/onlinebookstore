@@ -1,0 +1,22 @@
+{
+  "realm": "onlinebookstore-realm",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "onlinebookstore-client",
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["*"],
+      "webOrigins": ["*"]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "credentials": [ { "type": "password", "value": "admin", "temporary": false } ],
+      "realmRoles": ["ADMIN"]
+    }
+  ],
+  "roles": { "realm": [ { "name": "ADMIN" } ] }
+}

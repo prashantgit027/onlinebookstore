@@ -13,24 +13,28 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 @Service
-public class CartService {
+public class CartService implements CartServicePort {
     private static final Logger LOG = LoggerFactory.getLogger(CartService.class);
 
     private final CartRepository cartRepository;
     private final BookRepository bookRepository;
     private final OrderRepository orderRepository;
+    private final OrderFactory orderFactory;
 
-    public CartService(CartRepository cartRepository, BookRepository bookRepository, OrderRepository orderRepository) {
+    public CartService(CartRepository cartRepository, BookRepository bookRepository, OrderRepository orderRepository, OrderFactory orderFactory) {
         this.cartRepository = cartRepository;
         this.bookRepository = bookRepository;
         this.orderRepository = orderRepository;
+        this.orderFactory = orderFactory;
     }
 
+    @Override
     public Cart getCartForUser(User user) {
         LOG.debug("Get or create cart for user: {}", user.getUsername());
         return cartRepository.findByUser(user).orElseGet(() -> cartRepository.save(new Cart(user)));
     }
 
+    @Override
     @Transactional
     public Cart addItem(User user, Long bookId, Integer qty) {
         LOG.debug("Add item: bookId={}, qty={} for user={}", bookId, qty, user.getUsername());
@@ -38,7 +42,7 @@ public class CartService {
         Cart cart = getCartForUser(user);
         Optional<CartItem> existing = cart.getItems().stream().filter(i -> i.getBook().getId().equals(bookId)).findFirst();
         if (existing.isPresent()) {
-            existing.get().setQuantity(existing.get().getQuantity() + qty);
+            existing.get().increaseQuantity(qty);
         } else {
             cart.getItems().add(new CartItem(book, qty));
         }
@@ -47,14 +51,17 @@ public class CartService {
         return saved;
     }
 
+    @Override
     @Transactional
     public Cart updateItem(User user, Long cartItemId, Integer qty) {
         LOG.debug("Update cartItem {} to qty {} for user {}", cartItemId, qty, user.getUsername());
         Cart cart = getCartForUser(user);
-        cart.getItems().stream().filter(i -> i.getId().equals(cartItemId)).findFirst().orElseThrow(() -> new IllegalArgumentException("Cart item not found")).setQuantity(qty);
+        CartItem item = cart.getItems().stream().filter(i -> i.getId().equals(cartItemId)).findFirst().orElseThrow(() -> new IllegalArgumentException("Cart item not found"));
+        item.setQuantity(qty);
         return cartRepository.save(cart);
     }
 
+    @Override
     @Transactional
     public Cart removeItem(User user, Long cartItemId) {
         LOG.debug("Remove cartItem {} for user {}", cartItemId, user.getUsername());
@@ -63,6 +70,7 @@ public class CartService {
         return cartRepository.save(cart);
     }
 
+    @Override
     @Transactional
     public OrderEntity checkout(User user) {
         LOG.info("Checkout initiated for user {}", user.getUsername());
@@ -71,19 +79,14 @@ public class CartService {
             LOG.warn("Attempt to checkout empty cart for user {}", user.getUsername());
             throw new IllegalStateException("Cannot checkout empty cart");
         }
-        OrderEntity order = new OrderEntity();
-        order.setUser(user);
+        OrderEntity order = orderFactory.createOrder(user);
         BigDecimal total = BigDecimal.ZERO;
         for (CartItem ci : cart.getItems()) {
             Book b = bookRepository.findById(ci.getBook().getId()).orElseThrow(() -> new IllegalArgumentException("Book missing during checkout"));
-            if (b.getStock() < ci.getQuantity()) {
-                LOG.warn("Insufficient stock for {} during checkout of user {}", b.getTitle(), user.getUsername());
-                throw new IllegalStateException("Insufficient stock for " + b.getTitle());
-            }
-            b.setStock(b.getStock() - ci.getQuantity());
-            OrderItem oi = new OrderItem(b.getTitle(), b.getPrice(), ci.getQuantity());
-            order.getItems().add(oi);
-            total = total.add(b.getPrice().multiply(BigDecimal.valueOf(ci.getQuantity())));
+            // Use domain behaviour which will throw domain exceptions when invalid
+            b.decreaseStock(ci.getQuantity());
+            order.getItems().add(orderFactory.createLineItem(b, ci.getQuantity()));
+            total = total.add(orderFactory.lineTotal(b, ci.getQuantity()));
             bookRepository.save(b);
         }
         order.setTotal(total);
@@ -94,3 +97,4 @@ public class CartService {
         return saved;
     }
 }
+

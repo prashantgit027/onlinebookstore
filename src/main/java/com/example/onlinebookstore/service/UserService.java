@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-public class UserService {
+public class UserService implements UserServicePort {
     private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
@@ -21,11 +21,13 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Override
     public User register(String username, String password) {
         LOG.info("Registering user: {}", username);
         User u = new User(username, passwordEncoder.encode(password));
         return userRepository.save(u);
     }
 
+    @Override
     public Optional<User> findByUsername(String username) { return userRepository.findByUsername(username); }
 }

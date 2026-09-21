@@ -23,7 +23,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         LOG.debug("Loading user by username: {}", username);
         return userRepository.findByUsername(username)
                 .map(u -> org.springframework.security.core.userdetails.User
-                        .withUsername(u.getUsername()).password(u.getPassword()).roles(u.getRole()).build())
+                        .withUsername(u.getUsername()).password(u.getPassword()).roles(u.getRole().name()).build())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 }

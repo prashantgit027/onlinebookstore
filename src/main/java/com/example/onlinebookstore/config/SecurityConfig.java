@@ -26,7 +26,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/api/auth/**", "/api/books/**", "/h2-console/**").permitAll()
+                .antMatchers("/api/auth/**", "/h2-console/**", "/actuator/**").permitAll()
+                .antMatchers(org.springframework.http.HttpMethod.GET, "/api/books/**").permitAll()
+                .antMatchers("/api/books/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
