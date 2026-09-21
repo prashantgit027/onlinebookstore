@@ -18,9 +18,9 @@ public class DataInitializer {
     public CommandLineRunner init(BookRepository bookRepository) {
         return args -> {
             LOG.info("Initializing sample books");
-            bookRepository.save(new Book("Effective Java", "Joshua Bloch", new BigDecimal("45.00"), 10));
-            bookRepository.save(new Book("Clean Code", "Robert C. Martin", new BigDecimal("40.00"), 8));
-            bookRepository.save(new Book("Java Concurrency in Practice", "Brian Goetz", new BigDecimal("50.00"), 5));
+            bookRepository.save(Book.builder().title("Effective Java").author("Joshua Bloch").price(new BigDecimal("45.00")).stock(10).build());
+            bookRepository.save(Book.builder().title("Clean Code").author("Robert C. Martin").price(new BigDecimal("40.00")).stock(8).build());
+            bookRepository.save(Book.builder().title("Java Concurrency in Practice").author("Brian Goetz").price(new BigDecimal("50.00")).stock(5).build());
         };
     }
 }
