@@ -5,7 +5,7 @@ hardening this project, as requested by the code review checklist.
 
 ## Tooling
 - GitHub Copilot (agent mode, Claude Sonnet model) was used as a pair
-  programmer for implementing features, refactoring, diagnosing build/test
+  programmer for implementing plans,features, refactoring, diagnosing build/test
   failures, and writing this documentation.
 
 ## How AI was used
@@ -41,7 +41,7 @@ hardening this project, as requested by the code review checklist.
    tests, CI."
 2. "Make the Gradle build actually compile and pass tests in this sandbox."
 3. "Run the app, check the curls and test cases."
-4. "Verify which of the 27 review findings have actually been addressed in
+4. "Verify which of the review findings have actually been addressed in
    the codebase."
 5. "Fix everything to comply with the review points; run the app and check
    curls/tests; don't commit anything."
