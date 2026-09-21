@@ -1,7 +1,7 @@
 # AI-Assisted Development Notes
 
 This document records how AI assistance was used while building and
-hardening this project, as requested by the code review checklist.
+hardening this project.
 
 ## Tooling
 - GitHub Copilot (agent mode, Claude Sonnet model) was used as a pair
@@ -30,9 +30,9 @@ hardening this project, as requested by the code review checklist.
   and admin-only book CRUD authorization checks).
 
 ## Human review
-- All AI-proposed changes were reviewed for correctness against the existing
+- All AI-proposed changes were self reviewed for correctness against the existing
   test suite and manual `curl` smoke tests before being considered complete.
-- No changes were auto-committed to git; the developer/reviewer controls
+- No changes were auto-committed to git; the developer/self reviewer controls
   when and what gets committed.
 
 ## Prompts (representative, paraphrased)
@@ -41,7 +41,7 @@ hardening this project, as requested by the code review checklist.
    tests, CI."
 2. "Make the Gradle build actually compile and pass tests in this sandbox."
 3. "Run the app, check the curls and test cases."
-4. "Verify which of the review findings have actually been addressed in
+4. "Verify which of the failure findings have actually been addressed in
    the codebase."
-5. "Fix everything to comply with the review points; run the app and check
+5. "Fix everything to comply with the failure points; run the app and check
    curls/tests; don't commit anything."
