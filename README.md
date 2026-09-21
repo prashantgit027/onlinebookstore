@@ -150,7 +150,7 @@ Keycloak documentation: https://www.keycloak.org/docs/latest/securing_apps/
 API docs / Swagger UI
 ---------------------
 This project exposes OpenAPI documentation via `springdoc`.
-After running the application, visit `/swagger-ui.html` or `/v3/api-docs` to view the interactive API documentation.
+After running the application, visit `/openapi.yaml` using swagger editor to view the interactive API documentation.
 
 Prometheus scrape config
 ------------------------
