@@ -21,17 +21,70 @@ paths:
   /api/books:
     get:
       tags: [Books]
-      summary: List all books
+      summary: List all books with pagination and sorting
       operationId: listBooks
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "title,asc"
       responses:
         "200":
-          description: List of books
+          description: Paginated list of books
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Book"
+                type: object
+                properties:
+                  content:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Book"
+                  totalElements:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  number:
+                    type: integer
+    post:
+      tags: [Books]
+      summary: Create a new book (Admin only)
+      operationId: createBook
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookCreateRequest"
+      responses:
+        "200":
+          description: Book created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "400":
+          description: Invalid input or validation error
+        "401":
+          description: Missing or invalid token
+        "403":
+          description: Insufficient permissions (admin role required)
 
   /api/books/{id}:
     get:
@@ -52,6 +105,62 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Book"
+        "404":
+          description: Book not found
+    put:
+      tags: [Books]
+      summary: Update an existing book (Admin only)
+      operationId: updateBook
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookCreateRequest"
+      responses:
+        "200":
+          description: Book updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "400":
+          description: Invalid input or validation error
+        "401":
+          description: Missing or invalid token
+        "403":
+          description: Insufficient permissions (admin role required)
+        "404":
+          description: Book not found
+    delete:
+      tags: [Books]
+      summary: Delete a book (Admin only)
+      operationId: deleteBook
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "204":
+          description: Book deleted successfully
+        "401":
+          description: Missing or invalid token
+        "403":
+          description: Insufficient permissions (admin role required)
         "404":
           description: Book not found
 
@@ -236,6 +345,29 @@ components:
         author: "Joshua Bloch"
         price: 45.00
         stock: 10
+
+    BookCreateRequest:
+      type: object
+      required: [title, author, price, stock]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        author:
+          type: string
+          minLength: 1
+        price:
+          type: number
+          format: double
+          minimum: 0
+        stock:
+          type: integer
+          minimum: 0
+      example:
+        title: "The Pragmatic Programmer"
+        author: "David Thomas"
+        price: 49.99
+        stock: 50
 
     User:
       type: object
